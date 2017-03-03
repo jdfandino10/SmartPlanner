@@ -24,6 +24,7 @@ router.get('/', function(req, res, next) {
 	res.sendfile('index.html');
 });
 
+//--------------Funciones de peticiones
 /* GET usuario o all users si user_name no esta definido*/
 router.get('/users', function (req, res) {
 	var username = req.query.username;
@@ -106,11 +107,28 @@ router.put('/users/:id', function(req, res){
 		res.send(e);
 	}
 });
+//--------------Fin funciones de peticiones
 
+//--------------Funciones de consulta a BD
+/*Metodo que retorna las tareas*/
 function getHmks(userIdObj, callback) {//TODO: Completar funcion getHmks
 	callback([]);
 }
 
+/*Metod que da el histórico de tareas ordenado cronologicamente*/
+function getHistoricHmks(userIdObj, callback){
+	MongoClient.connect(url, function(err, db){
+		assert.equal(null, err);
+		var usersCol = db.collection("Users");
+		usersCol.find( {'_id':userIdObj}, {'hmk':1}).toArray(function(err, data){
+			assert.equal(null, err);
+			cronologicalOrder(data[0].hmk);
+			callback(data);
+		});
+	});
+}
+
+/*Metodo que da los usuarios*/
 function getUsers(username, callback) {
 	MongoClient.connect(url, function(err, db){
 		assert.equal(null, err);
@@ -126,7 +144,7 @@ function getUsers(username, callback) {
 // probado: bien!
 
 
-
+/*Metodo que agrega tarea a un usuario*/
 function addHmkToUser(objId, hmk, callback) {
 	MongoClient.connect(url, function(err, db){
 		assert.equal(null, err);
@@ -139,6 +157,7 @@ function addHmkToUser(objId, hmk, callback) {
 }
 // probado: bien!
 
+/*Metodo que elimina tarea de un usuario*/
 function deleteHmk(userIdObj, hmkIdObj, callback) {
 	MongoClient.connect(url, function(err, db){
 		assert.equal(null, err);
@@ -151,7 +170,7 @@ function deleteHmk(userIdObj, hmkIdObj, callback) {
 }
 // probado: bien!
 
-
+/*Metodo que da usuarios que estan suscritos al correo*/
 function getSubscribedUsers(callback) {
 	MongoClient.connect(url, function(err, db){
 		assert.equal(null, err);
@@ -166,12 +185,18 @@ function getSubscribedUsers(callback) {
 }
 // probado: falta
 
+//--------------Funciones de ordenar
+function cronologicalOrder(hmkArr) {
+	hmkArr.sort(function(a, b){
+		return b.limit_date-a.limit_date;
+	});
+}
+// probado: bien!
+
 function importanceOrderHmks(hmks, maxDate){
 	var maxMilis = Infinity;
 	var minDate = moment().valueOf();
-	if(maxDate){
-		maxMilis = moment().add(maxDate, 'days').valueOf();
-	}
+	if(maxDate) maxMilis = moment().add(maxDate, 'days').valueOf();
 	var candidates = [];
 	hmks.forEach(function(hmk){
 		if(hmk.limit_date<=maxMilis && hmk.limit_date>=minDate){
@@ -185,7 +210,11 @@ function importanceOrderHmks(hmks, maxDate){
 	return candidates;
 }
 // probado: falta
+//--------------Fin funciones de ordenar
 
+
+//--------------Funciones de correo
+/* Funcion que manda el correo a los usuarios suscritos*/
 function correo() {
 	getSubscribedUsers( function(obj) {
 		var users = obj;
@@ -249,7 +278,7 @@ true
 );
 job.start();
 console.log('job status', job.running); 
-
+//--------------Fin funciones de correo
 
 module.exports = router;
 /*
