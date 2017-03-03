@@ -3,8 +3,8 @@ var router = express.Router();
 var MongoClient = require('mongodb').MongoClient;
 var assert = require('assert');
 var ObjectId = require('mongodb').ObjectId;
-var urlParser = require('url');
 var moment = require('moment');
+var CronJob = require('cron').CronJob;
 const nodemailer = require('nodemailer');
 
 var url = 'mongodb://server:serverPass1@ds163718.mlab.com:63718/smart_planner';
@@ -26,64 +26,98 @@ router.get('/', function(req, res, next) {
 
 /* GET usuario o all users si user_name no esta definido*/
 router.get('/users', function (req, res) {
-	var url_parts = urlParser.parse(req.url, true);
-	var query = url_parts.query;
-	var username = query.username;
-	console.log(username);
+	var username = req.query.username;
 	getUsers(username, function (users) {
-		console.log("Llega al callback");
-		console.log(users);
-		function done() {
-			res.setHeader('Content-Type', 'application/json');
-			res.send(JSON.stringify(users));
-		}
-		if(username){
-			getOrderedHomeworks(function(data){
-				users[0].hmk = data;
-				done();
-			}, users[0].hmk);
-		}else {
-			done();
-		}
+		res.setHeader('Content-Type', 'application/json');
+		res.send(JSON.stringify(users));
 	});
 });
 // probado: bien!
 
+router.get('/users/:id/hmks', function(req, res, next){
+	//en req.query hay categoria y orden
+	try{
+		var categoria = req.query.categoria;
+		var orden = req.query.orden;
+		var userId = ObjectId(req.params.id);
+		getHmks(userId, categoria, orden, function(hmks){ // TODO: falta modificar getHmks
+			res.setHeader('Content-Type', 'application/json');
+			res.send(JSON.stringify(hmks));
+		});
+	}catch(e){
+		res.send(e);
+	}
+});
+
+
 /* POST de una tarea a un usuario segun su id*/
-router.post('/hmk', function (req, res) {
-	var id = req.body.userId;
-	var hmk = req.body.hmk;
-	addHmkToUser(id, hmk, function(obj){
-		if(obj.error){
-			res.status(404).send("No se puede agregar tareas con el mismo nombre y fecha limite");
-		}else{
+router.post('/users/:id/hmks', function (req, res) {
+	try{
+		var id = ObjectId(req.params.id);
+		var hmk = req.body;
+		hmk._id = new ObjectId();
+		addHmkToUser(id, hmk, function(obj){
 			res.setHeader('Content-Type', 'application/json');
 			res.send(JSON.stringify(obj));
-		}
-	});
+		});
+	}catch(e){
+		res.send(e);
+	}
 });
 // probado: bien!
+
+
+/* PUT modifica una tarea a un usuario segun su id*/
+router.put('/users/:id/hmks/:id_h', function (req, res) {
+	try{
+		var idUser = ObjectId(req.params.id);
+		var idHmk = ObjectId(req.params.id_h);
+		var hmk = req.body;
+		//TODO: modificar la tarea
+
+	}catch(e){
+		res.send(e);
+	}
+});
 
 
 /* DELETE una tarea de un usuario segun su id*/
-router.delete('/hmk', function(req, res){
-	var id = req.body.userId;
-	var hmk = req.body.hmk;
-	deleteHmk(id, hmk, function(obj){
-		res.setHeader('Content-Type', 'application/json');
-		res.send(JSON.stringify(obj));
-	});
+router.delete('/users/:id/hmks/:id_h', function(req, res){
+	try{
+		var idUser = ObjectId(req.params.id);
+		var idHmk = ObjectId(req.params.id_h);
+		deleteHmk(idUser, idHmk, function(obj){ //falta modificar la funcion
+			res.setHeader('Content-Type', 'application/json');
+			res.send(JSON.stringify(obj));
+		});
+	}catch(e){
+		res.send(e);
+	}
 });
 // probado: bien!
+
+/*PUT de un usuario segun su id*/
+router.put('/users/:id', function(req, res){
+	try{
+		var idUser = ObjectId(req.params.id);
+		var user = req.body;
+		//TODO: modificar un usario
+	}catch(e){
+		res.send(e);
+	}
+});
+
+function getHmks(userIdObj, callback) {//TODO: Completar funcion getHmks
+	callback([]);
+}
 
 function getUsers(username, callback) {
 	MongoClient.connect(url, function(err, db){
 		assert.equal(null, err);
 		var f = {'user_name':username};
-		console.log(f);
 		if(!username) f={};
-		var tweetsCol = db.collection("Users");
-		tweetsCol.find(f).toArray(function(err, data){
+		var usersCol = db.collection("Users");
+		usersCol.find(f, {'hmk':0}).toArray(function(err, data){
 			assert.equal(null, err);
 			callback(data);
 		});
@@ -91,65 +125,40 @@ function getUsers(username, callback) {
 }
 // probado: bien!
 
-function addHmkToUser(id, hmk, callback) {
+
+
+function addHmkToUser(objId, hmk, callback) {
 	MongoClient.connect(url, function(err, db){
 		assert.equal(null, err);
-
-		var tweetsCol = db.collection("Users");
-		tweetsCol.find({'_id': ObjectId(id), 'hmk': {$elemMatch: {'name': hmk.name, 'limit_date':hmk.limit_date}}}).toArray(function(err, data){
+		var usersCol = db.collection("Users");
+		usersCol.update({'_id': objId}, {$push: {'hmk':hmk}}, function(err, status){
 			assert.equal(null, err);
-			if(data.length==0){
-				tweetsCol.update({'_id': ObjectId(id)}, {$push: {'hmk':hmk}}, {}, function(err, object){
-					assert.equal(null, err);
-
-					callback(object);
-				});
-			}else{
-				callback({'error':'Ya existe dicha tarea'});
-			}
+			callback(status);
 		});
 	});
 }
 // probado: bien!
 
-function deleteHmk(id, hmk, callback) {
+function deleteHmk(userIdObj, hmkIdObj, callback) {
 	MongoClient.connect(url, function(err, db){
 		assert.equal(null, err);
-
-		var tweetsCol = db.collection("Users");
-		tweetsCol.update(
-			{'_id': ObjectId(id)},
-			{$pull:
-				{
-					'hmk':{'name': hmk.name, 'limit_date':hmk.limit_date}
-				}
-			},
-			{},
-			function(err, object){
-				assert.equal(null, err);
-
-				callback(object);
-			});
+		var usersCol = db.collection("Users");
+		usersCol.update({'_id': userIdObj}, {$pull:{'hmk':{'_id': hmkIdObj}}}, function(err, status){
+			assert.equal(null, err);
+			callback(status);
+		});
 	});
 }
 // probado: bien!
 
-function timeToSaturdayMidDay() {
-	
-	var ans = moment().day(6).hour(9).valueOf() - new Date().getTime();
-	console.log(ans);
-	return ans;
-}
-// probado: bien!
 
 function getSubscribedUsers(callback) {
-	console.log("llega a getSubscribedUsers");
 	MongoClient.connect(url, function(err, db){
 		assert.equal(null, err);
 		var f = {'subscribed':'true'};
-		var tweetsCol = db.collection("Users");
+		var usersCol = db.collection("Users");
 		console.log("va a hacer el query");
-		tweetsCol.find(f).toArray(function(err, data){
+		usersCol.find(f).toArray(function(err, data){
 			assert.equal(null, err);
 			callback(data);
 		});
@@ -157,12 +166,11 @@ function getSubscribedUsers(callback) {
 }
 // probado: falta
 
-function getOrderedHomeworks(callback, hmks, maxDate){
-	console.log("llega a getOrderedHomeworks");
+function importanceOrderHmks(hmks, maxDate){
 	var maxMilis = Infinity;
 	var minDate = moment().valueOf();
 	if(maxDate){
-		var maxDay = moment().add(maxDate, 'days').valueOf();
+		maxMilis = moment().add(maxDate, 'days').valueOf();
 	}
 	var candidates = [];
 	hmks.forEach(function(hmk){
@@ -174,51 +182,43 @@ function getOrderedHomeworks(callback, hmks, maxDate){
 	candidates.sort(function(a, b){
 		return a.score-b.score;
 	});
-	console.log(candidates);
-	callback(candidates);
+	return candidates;
 }
 // probado: falta
 
 function correo() {
-	console.log("llega a funcion del correo");
 	getSubscribedUsers( function(obj) {
 		var users = obj;
-		console.log(users);
 		users.forEach(function(user){
 			// setup email data with unicode symbols
-			console.log("usuario: "+user);
 			var mail = user.email;
 			var name = user.user_name;
-			getOrderedHomeworks(function(data) {
-				var hmks = data;
-				console.log(hmks)
-				var subj = name+', tienes '+hmks.length+' tareas para esta semana!';
-				var hmklist = "<ol>";
-				hmks.forEach(
-					function(hmk) {
-						hmklist+="<li>"+hmk.name+" (importancia: "+hmk.importance+")</li>";
-					}
-				);
-				hmklist+="</ol>";
-				var msg = "<h1>Hola "+name+"!</h1><h2>Tienes "+hmks.length+" tareas para esta semana.</h2> \
-				<p> A continuación te presentamos el orden en el cual te sugerimos hacerlas:</p>"+hmklist;
-				let mailOptions = {
-    				'from': '"Smart Planner"', // sender address
-    				'to': mail, // list of receivers
-    				'subject': subj, // Subject line
-    				//'text': 'Hello world ?', // plain text body
-    				'html': msg // html body
-    			};
-
-				// send mail with defined transport object
-				transporter.sendMail(mailOptions, (error, info) => {
-					if (error) {
-						return console.log(error);
-					}
-					console.log('Message %s sent: %s', info.messageId, info.response);
-				});
-			},user.hmk, 7);
+			var hmks = importanceOrderHmks(user.hmk, 7);
+			var subj = name+', tienes '+hmks.length+' tareas para esta semana!';
+			const list = hmks.map(hmk => "<li>"+hmk.name+" (importancia: "+hmk.importance+")</li>");
+			const hmklist = '<ol>' + list.join('') + '</ol>';
+			var msg = "<h1>Hola "+name+"!</h1><h2>Tienes "+hmks.length+" tareas para esta semana.</h2> \
+			<p> A continuación te presentamos el orden en el cual te sugerimos hacerlas:</p>"+hmklist;
+			sendMail(mail, subj, msg);
 		});
+	});
+}
+
+function sendMail(mail, subj, msg){
+	let mailOptions = {
+    	'from': 'Smart Planner <smart_planner@no_reply.com>', // sender address
+    	'to': mail, // list of receivers
+    	'subject': subj, // Subject line
+    	//'text': 'Hello world ?', // plain text body
+    	'html': msg // html body -> se puede {'path':'http://....'}!!! re util jaja
+    };
+
+	// send mail with defined transport object
+	transporter.sendMail(mailOptions, (error, info) => {
+		if (error) {
+			return console.log(error);
+		}
+		console.log('Message %s sent: %s', info.messageId, info.response);
 	});
 }
 
@@ -226,15 +226,30 @@ function correo() {
 
 
 
-/*Metodo para enviar correo*/
-setTimeout(function(){
-	console.log("hace funcion del timeout");
-	correo();
+
+//setTimeout(function(){
+//	console.log("hace funcion del timeout");
+//	correo();
 	/*setInterval(function(){
 		correo();
 	}, timeToSaturdayMidDay());*/ //Ahora se hace lo mismo pero con intervalo pues ya se asegura que queda exactamente una semana
-}, timeToSaturdayMidDay()); //Calcula el tiempo hasta el sabado 9 am
+//}, timeToSaturdayMidDay()); //Calcula el tiempo hasta el sabado 9 am
 // probado: falta
+
+/*Metodo para enviar correo*/
+/*CRONJOB: '* * * * * *' -> 'Seg(0-59) Min(0-59) Hora(0-23) DiaMes(1-31) Mes(0-11) DiaSemana (0-6)'*/
+var job = new CronJob('00 00 8 * * 5', function() {
+  /*
+   * Corre todos los sabados
+   * a las 8:30:00 AM.
+   */
+   correo();
+},
+true
+);
+job.start();
+console.log('job status', job.running); 
+
 
 module.exports = router;
 /*
