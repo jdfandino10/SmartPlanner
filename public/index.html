@@ -5,7 +5,7 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-	<title>SmartPlanner</title>
+	<title>SmartPlanner API</title>
 
 	<!-- Bootstrap --><!-- Latest compiled and minified CSS -->
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -13,19 +13,154 @@
 	<!-- Optional theme -->
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
 
+	<link rel="stylesheet" href="./stylesheets/style.css"/>
 	<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
 	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-      <![endif]-->
-  </head>
-  <body>
-	<h1>Hello, world!</h1>
+	<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+</head>
+<body>
+	<div class="container">
+		<div class="jumbotron">
+			<h1>SmartPlanner API!</h1>
+			<p>API REST de la aplicación SmartPlanner</p>
+		</div>
+		<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 ">
+			<table class="table .table-bordered table-striped">
+				<tbody>
+					<tr>
+						<td>
+							<p><strong>Verbo</strong></p>
+						</td>
+						<td>
+							<p><strong>URL</strong></p>
+						</td>
+						<td>
+							<p><strong>Descripci&oacute;n</strong></p>
+						</td>
+						<td>
+							<p><strong>Par&aacute;metros</strong></p>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<p><span>GET</span></p>
+						</td>
+						<td>
+							<p><span>/users</span></p>
+						</td>
+						<td>
+							<p><span>Da todos los usuarios</span></p>
+						</td>
+						<td>
+							<p><span>-</span></p>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<p><span>GET</span></p>
+						</td>
+						<td>
+							<p><span>/users?username=default</span></p>
+						</td>
+						<td>
+							<p><span>Da el usuario con el username default (con arreglo ids tarea)</span></p>
+						</td>
+						<td>
+							<p><span>default: nombre del usuario</span></p>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<p><span>GET</span></p>
+						</td>
+						<td>
+							<p><span>/users/:id/hmks?categoria=c&amp;orden=o</span></p>
+						</td>
+						<td>
+							<p><span>Da las tareas del usuario con id :id segun los parametros, es decir, las tareas de categor&iacute;a c ordenadas por o.</span></p>
+						</td>
+						<td>
+							<p><span>c:</span></p>
+							<p><span>-historico[orden cronol&oacute;gico]</span></p>
+							<p><span>-terminadas</span></p>
+							<p><span>-no_terminadas</span></p>
+							<p><span>-por_hacer</span></p>
+							<p><span>o:</span></p>
+							<p><span>-priorizado</span></p>
+							<p><span>-fecha</span></p>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<p><span>POST</span></p>
+						</td>
+						<td>
+							<p><span>/users/:id/hmks</span></p>
+						</td>
+						<td>
+							<p><span>Crea una nueva tarea al usuario con id :id</span></p>
+						</td>
+						<td>
+							<p><span>body:{</span></p>
+								<p><span> [objeto tarea]</span></p>
+								<p><span>}</span></p>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<p><span>PUT</span></p>
+							</td>
+							<td>
+								<p><span>/users/:id/hmks/:id_h</span></p>
+							</td>
+							<td>
+								<p><span>Modifica una nueva tarea de id :id_h. Solo si esta tarea est&aacute; pendiente.</span></p>
+							</td>
+							<td>
+								<p><span>body:{</span></p>
+									<p><span> [objeto tarea]</span></p>
+									<p><span>}</span></p>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<p><span>DELETE</span></p>
+								</td>
+								<td>
+									<p><span>/users/:id/hmks/:id_h</span></p>
+								</td>
+								<td>
+									<p><span>Elimina la tarea con id :id_h</span></p>
+								</td>
+								<td>&nbsp;</td>
+							</tr>
+							<tr>
+								<td>
+									<p><span>PUT</span></p>
+								</td>
+								<td>
+									<p><span>/users/:id</span></p>
+								</td>
+								<td>
+									<p><span>Modifica al usuario con id :id</span></p>
+								</td>
+								<td>
+									<p><span>body:{</span></p>
+										<p><span> [objeto usuario]</span></p>
+										<p><span>}</span></p>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 
-  	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-  	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  	<!-- Latest compiled and minified JavaScript -->
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-  </body>
-</html>
+				</div>
+				<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+				<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+				<!-- Latest compiled and minified JavaScript -->
+				<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+			</body>
+			</html>

@@ -74,13 +74,15 @@ router.put('/users/:id/hmks/:id_h', function (req, res) {
 		var idUser = ObjectId(req.params.id);
 		var idHmk = ObjectId(req.params.id_h);
 		var hmk = req.body;
-		//TODO: modificar la tarea
-
+		updateHmk(idUser, idHmk, hmk, function(obj){
+			res.setHeader('Content-Type', 'application/json');
+			res.send(JSON.stringify(obj));
+		});
 	}catch(e){
 		res.send(e);
 	}
 });
-
+// probado: bien!
 
 /* DELETE una tarea de un usuario segun su id*/
 router.delete('/users/:id/hmks/:id_h', function(req, res){
@@ -102,7 +104,10 @@ router.put('/users/:id', function(req, res){
 	try{
 		var idUser = ObjectId(req.params.id);
 		var user = req.body;
-		//TODO: modificar un usario
+		updateUser(idUser, user, function(obj){
+			res.setHeader('Content-Type', 'application/json');
+			res.send(JSON.stringify(obj));
+		});
 	}catch(e){
 		res.send(e);
 	}
@@ -115,7 +120,7 @@ function getHmks(userIdObj, callback) {//TODO: Completar funcion getHmks
 	callback([]);
 }
 
-/*Metod que da el histórico de tareas ordenado cronologicamente*/
+/*Método que da el histórico de tareas ordenado cronologicamente*/
 function getHistoricHmks(userIdObj, callback){
 	MongoClient.connect(url, function(err, db){
 		assert.equal(null, err);
@@ -128,7 +133,7 @@ function getHistoricHmks(userIdObj, callback){
 	});
 }
 
-/*Metodo que da los usuarios*/
+/*Método que da los usuarios*/
 function getUsers(username, callback) {
 	MongoClient.connect(url, function(err, db){
 		assert.equal(null, err);
@@ -143,8 +148,25 @@ function getUsers(username, callback) {
 }
 // probado: bien!
 
+/*Método que modifica a un usuario con el id dado*/
+function updateUser(userIdObj, user, callback) {
+	MongoClient.connect(url, function(err, db){
+		assert.equal(null, err);
+		var usersCol = db.collection("Users");
+		usersCol.update({'_id': userIdObj},
+										{$set: {'user_name': user.user_name,
+														'email': user.email,
+														'subscribed': user.subscribed}},
+										function(err, status){
+												assert.equal(null, err);
+												callback(status);
+										});
+		});
+	}
+// probado: bien!
 
-/*Metodo que agrega tarea a un usuario*/
+
+/*Método que agrega tarea a un usuario*/
 function addHmkToUser(objId, hmk, callback) {
 	MongoClient.connect(url, function(err, db){
 		assert.equal(null, err);
@@ -157,7 +179,7 @@ function addHmkToUser(objId, hmk, callback) {
 }
 // probado: bien!
 
-/*Metodo que elimina tarea de un usuario*/
+/*Método que elimina tarea de un usuario*/
 function deleteHmk(userIdObj, hmkIdObj, callback) {
 	MongoClient.connect(url, function(err, db){
 		assert.equal(null, err);
@@ -168,6 +190,27 @@ function deleteHmk(userIdObj, hmkIdObj, callback) {
 		});
 	});
 }
+// probado: bien!
+
+/*Método que actualiza una tarea de un usuario*/
+function updateHmk(userIdObj, hmkIdObj, hmk, callback) {
+	MongoClient.connect(url, function(err, db){
+		assert.equal(null, err);
+		var usersCol = db.collection("Users");
+		usersCol.update({'_id': userIdObj,'hmk._id': hmkIdObj},
+										{$set: {'hmk.$.name': hmk.name,
+														'hmk.$.description': hmk.description,
+														'hmk.$.estimated_time': hmk.estimated_time,
+														'hmk.$.limit_date': hmk.limit_date,
+														'hmk.$.done_percentage': hmk.done_percentage,
+														'hmk.$.importance': hmk.importance,
+														}},
+										function(err, status){
+										assert.equal(null, err);
+										callback(status);
+									});
+							});
+						}
 // probado: bien!
 
 /*Metodo que da usuarios que estan suscritos al correo*/
@@ -277,7 +320,7 @@ var job = new CronJob('00 00 8 * * 5', function() {
 true
 );
 job.start();
-console.log('job status', job.running); 
+console.log('job status', job.running);
 //--------------Fin funciones de correo
 
 module.exports = router;
