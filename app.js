@@ -1,6 +1,7 @@
+// Falta el uso de 'use strict' para preveer errores en el código y detectar acciones inseguras.
 var express = require('express');
 var path = require('path');
-var favicon = require('serve-favicon');
+var favicon = require('serve-favicon'); //No es necesario usar esta librería para mostrar el favicon. Se podría hacer más fácil.
 var cors = require('cors');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
@@ -10,6 +11,7 @@ var index = require('./routes/index');
 
 var app = express();
 
+// Se deben eliminar los comentarios de código en los archivos.
 // view engine setup
 /*app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');*/
