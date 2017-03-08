@@ -38,10 +38,10 @@ router.get('/users', function (req, res) {
 router.get('/users/:id/hmks', function(req, res, next){
 	//en req.query hay categoria y orden
 	try{
-		var categoria = req.query.categoria;
-		var orden = req.query.orden;
+		var category = req.query.category;
+		var order = req.query.order;
 		var userId = ObjectId(req.params.id);
-		getHmks(userId, categoria, orden, function(hmks){ // TODO: falta modificar getHmks
+		getHmks(userId, category, order, function(hmks){
 			res.setHeader('Content-Type', 'application/json');
 			res.send(JSON.stringify(hmks));
 		});
@@ -50,6 +50,7 @@ router.get('/users/:id/hmks', function(req, res, next){
 	}
 });
 
+//Probado bien!
 
 /* POST de una tarea a un usuario segun su id*/
 router.post('/users/:id/hmks', function (req, res) {
@@ -112,13 +113,20 @@ router.put('/users/:id', function(req, res){
 		res.send(e);
 	}
 });
+//Probado bien!
+
 //--------------Fin funciones de peticiones
 
 //--------------Funciones de consulta a BD
 /*Metodo que retorna las tareas*/
-function getHmks(userIdObj, callback) {//TODO: Completar funcion getHmks
-	callback([]);
+function getHmks(userIdObj, category, order, callback) {
+	if (category === 'finished') getFinishedHmks(userIdObj, order, callback);
+	else if (category === 'not_finished') getNotFinishedHmks(userIdObj, order, callback);
+	else if (category === 'not_started') getNotStartedHmks(userIdObj, order, callback);
+	else getHistoricHmks(userIdObj, callback);
 }
+
+//Probado bien!
 
 /*Método que da el histórico de tareas ordenado cronologicamente*/
 function getHistoricHmks(userIdObj, callback){
@@ -127,11 +135,121 @@ function getHistoricHmks(userIdObj, callback){
 		var usersCol = db.collection("Users");
 		usersCol.find( {'_id':userIdObj}, {'hmk':1}).toArray(function(err, data){
 			assert.equal(null, err);
-			cronologicalOrder(data[0].hmk);
-			callback(data);
+			if (data[0]){
+				cronologicalOrder(data[0].hmk);
+				callback(data[0].hmk);
+			}
+			else{
+				callback(data);
+			}
 		});
 	});
 }
+//Probado bien!
+
+/*Método que da las tareas qu ya fueron terminadas*/
+function getFinishedHmks(userIdObj, order, callback){
+	console.log(callback);
+	MongoClient.connect(url, function(err, db){
+		assert.equal(null, err);
+		var usersCol = db.collection("Users");
+		usersCol.aggregate(
+										 [ { $match: {'_id':userIdObj}},
+									 		{$project:{
+											 hmk : {
+												 		$filter: {
+															input: '$hmk',
+															as: 'hmk',
+															cond: { $eq: ['$$hmk.done_percentage', 1]}
+														}
+											 }
+									 }}]
+								 ).toArray(function(err, data){
+			assert.equal(null, err);
+			console.log(data[0].hmk);
+			if (data[0]){
+				var hmk;
+				if (order === 'date'){	hmk = cronologicalOrder(data[0].hmk);}
+				else {console.log('LLEGA')
+					hmk = importanceOrderHmks(data[0].hmk);}
+				callback(hmk);
+			}
+			else {
+				callback(data);
+			}
+		});
+	});
+}
+//Probado bien!
+
+
+/*Método que da las tareas que aun no han sido terminadas pero ya fueron empezadas*/
+function getNotFinishedHmks(userIdObj, order, callback){
+	MongoClient.connect(url, function(err, db){
+		assert.equal(null, err);
+		var usersCol = db.collection("Users");
+		usersCol.aggregate(
+									 [ { $match: {'_id':userIdObj}},
+										{$project:{
+										 hmk : {
+													$filter: {
+														input: '$hmk',
+														as: 'hmk',
+														cond: { $and: [{$gt: ['$$hmk.done_percentage', 0]},
+																					 {$lt: ['$$hmk.done_percentage', 1]}]}
+													}
+										 }
+								 }}]
+								 ).toArray(function(err, data){
+			assert.equal(null, err);
+			console.log(data[0])
+			if (data[0]){
+				var hmk;
+				if (order === 'date')	hmk = cronologicalOrder(data[0].hmk);
+				else hmk = importanceOrderHmks(data[0].hmk);
+				callback(hmk);
+			}
+			else {
+				callback(data);
+			}
+		});
+	});
+}
+
+//Probado bien!
+
+/*Método que da las tareas que no han sido empezadas aun*/
+function getNotStartedHmks(userIdObj, order, callback){
+	MongoClient.connect(url, function(err, db){
+		assert.equal(null, err);
+		var usersCol = db.collection("Users");
+		usersCol.aggregate(
+											[ { $match: {'_id':userIdObj}},
+ 									 		{$project:{
+ 											 hmk : {
+ 												 		$filter: {
+ 															input: '$hmk',
+ 															as: 'hmk',
+ 															cond: { $eq: ['$$hmk.done_percentage', 0]}
+ 														}
+ 											 }
+ 									 }}]
+											).toArray(function(err, data){
+			assert.equal(null, err);
+			if (data[0]){
+				var hmk;
+				if (order === 'date')	hmk = cronologicalOrder(data[0].hmk);
+				else hmk = importanceOrderHmks(data[0].hmk);
+				callback(hmk);
+			}
+			else {
+				callback(data);
+			}
+		});
+	});
+}
+
+//Probado bien!
 
 /*Método que da los usuarios*/
 function getUsers(username, callback) {
@@ -229,18 +347,32 @@ function getSubscribedUsers(callback) {
 // probado: falta
 
 //--------------Funciones de ordenar
+/*Método para ordenar las tareas por fecha*/
 function cronologicalOrder(hmkArr) {
 	hmkArr.sort(function(a, b){
 		return b.limit_date-a.limit_date;
 	});
+	return hmkArr;
 }
 // probado: bien!
 
+/*Método para ordenamiento de las tareas por prioridad
+
+La prioridad se define como un puntaje calculado como el tiempo
+hasta la fecha limite menos el tiempo estimado que aun queda por dedicar
+a la tarea (calculado como (1 - el porcetaje trabajado) * tiempo estimado).
+Luego un puntaje menor indica la necesidad de dar más prioridad a dicha
+tarea.
+
+*/
 function importanceOrderHmks(hmks, maxDate){
 	var maxMilis = Infinity;
 	var minDate = moment().valueOf();
 	if(maxDate) maxMilis = moment().add(maxDate, 'days').valueOf();
 	var candidates = [];
+	// Tener cuidado con la longitud del long debe tener 13 digitos
+	// (incluye milis y es el formato que momentjs da, si se usa un numero de longitud menor
+	// la comparación falla dado que se compara el número!) DAM
 	hmks.forEach(function(hmk){
 		if(hmk.limit_date<=maxMilis && hmk.limit_date>=minDate){
 			hmk.score = hmk.limit_date-((1-(hmk.done_percentage/100))*hmk.estimated_time);
@@ -252,7 +384,7 @@ function importanceOrderHmks(hmks, maxDate){
 	});
 	return candidates;
 }
-// probado: falta
+// probado: bien
 //--------------Fin funciones de ordenar
 
 

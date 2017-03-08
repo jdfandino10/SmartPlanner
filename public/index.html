@@ -77,20 +77,20 @@
 							<p><span>GET</span></p>
 						</td>
 						<td>
-							<p><span>/users/:id/hmks?categoria=c&amp;orden=o</span></p>
+							<p><span>/users/:id/hmks?category=c&amp;order=o</span></p>
 						</td>
 						<td>
 							<p><span>Da las tareas del usuario con id :id segun los parametros, es decir, las tareas de categor&iacute;a c ordenadas por o.</span></p>
 						</td>
 						<td>
 							<p><span>c:</span></p>
-							<p><span>-historico[orden cronol&oacute;gico]</span></p>
-							<p><span>-terminadas</span></p>
-							<p><span>-no_terminadas</span></p>
-							<p><span>-por_hacer</span></p>
+							<p><span>-history[orden cronol&oacute;gico, valor por defecto]</span></p>
+							<p><span>-finished</span></p>
+							<p><span>-not_finished</span></p>
+							<p><span>-not_started</span></p>
 							<p><span>o:</span></p>
-							<p><span>-priorizado</span></p>
-							<p><span>-fecha</span></p>
+							<p><span>-priorized[valor por defecto]</span></p>
+							<p><span>-date</span></p>
 						</td>
 					</tr>
 					<tr>
@@ -106,6 +106,13 @@
 						<td>
 							<p><span>body:{</span></p>
 								<p><span> [objeto tarea]</span></p>
+								<p><code>{"name": "Nombre de la tarea",
+							            "description": "Descripción de la tarea",
+							            "estimated_time": 3600000,
+							            "limit_date": 1598413880298,
+							            "done_percentage": 1,
+            							"importance": 2}
+								</code></p>
 								<p><span>}</span></p>
 							</td>
 						</tr>
@@ -122,6 +129,13 @@
 							<td>
 								<p><span>body:{</span></p>
 									<p><span> [objeto tarea]</span></p>
+									<p><code>{"name": "Nuevo nombre de la tarea",
+								            "description": "Nueva descripción de la tarea",
+								            "estimated_time": 3600000,
+								            "limit_date": 1598413880298,
+								            "done_percentage": 1,
+								            "importance": 2}
+									</code></p>
 									<p><span>}</span></p>
 								</td>
 							</tr>
@@ -150,6 +164,11 @@
 								<td>
 									<p><span>body:{</span></p>
 										<p><span> [objeto usuario]</span></p>
+										<p><code>{
+										    "user_name": "Nombre usuario",
+										    "email": "correo@correo.com",
+										    "subscribed": "true"}
+										</code><p>
 										<p><span>}</span></p>
 									</td>
 								</tr>
