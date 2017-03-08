@@ -243,7 +243,7 @@ function importanceOrderHmks(hmks, maxDate){
 	var candidates = [];
 	hmks.forEach(function(hmk){
 		if(hmk.limit_date<=maxMilis && hmk.limit_date>=minDate){
-			hmk.score = hmk.limit_date-((1-hmk.done_percentage)*hmk.estimated_time);
+			hmk.score = hmk.limit_date-((1-(hmk.done_percentage/100))*hmk.estimated_time);
 			candidates.push(hmk);
 		}
 	});
