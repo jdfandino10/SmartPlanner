@@ -160,7 +160,7 @@ function getFinishedHmks(userIdObj, order, callback){
 												 		$filter: {
 															input: '$hmk',
 															as: 'hmk',
-															cond: { $eq: ['$$hmk.done_percentage', 1]}
+															cond: { $eq: ['$$hmk.done_percentage', 100]}
 														}
 											 }
 									 }}]
@@ -183,7 +183,7 @@ function getFinishedHmks(userIdObj, order, callback){
 //Probado bien!
 
 
-/*Método que da las tareas que aun no han sido terminadas pero ya fueron empezadas*/
+/*Método que da las tareas que aun no han sido terminadas*/
 function getNotFinishedHmks(userIdObj, order, callback){
 	MongoClient.connect(url, function(err, db){
 		assert.equal(null, err);
@@ -195,8 +195,8 @@ function getNotFinishedHmks(userIdObj, order, callback){
 													$filter: {
 														input: '$hmk',
 														as: 'hmk',
-														cond: { $and: [{$gt: ['$$hmk.done_percentage', 0]},
-																					 {$lt: ['$$hmk.done_percentage', 1]}]}
+														cond: { $and: [{$gte: ['$$hmk.done_percentage', 0]},
+																					 {$lt: ['$$hmk.done_percentage', 100]}]}
 													}
 										 }
 								 }}]
@@ -218,7 +218,7 @@ function getNotFinishedHmks(userIdObj, order, callback){
 
 //Probado bien!
 
-/*Método que da las tareas que no han sido empezadas aun*/
+/*Método que da las tareas que no han sido terminadas y aun hay plazo para hacer (tareas por hacer)*/
 function getNotStartedHmks(userIdObj, order, callback){
 	MongoClient.connect(url, function(err, db){
 		assert.equal(null, err);
@@ -230,7 +230,8 @@ function getNotStartedHmks(userIdObj, order, callback){
  												 		$filter: {
  															input: '$hmk',
  															as: 'hmk',
- 															cond: { $eq: ['$$hmk.done_percentage', 0]}
+ 															cond: { $and: [{$lt: ['$$hmk.done_percentage', 100]},
+																					 {$gt: ['$$hmk.limit_date', moment().valueOf()]}]}
  														}
  											 }
  									 }}]
