@@ -231,7 +231,7 @@ function getNotStartedHmks(userIdObj, order, callback){
  															input: '$hmk',
  															as: 'hmk',
  															cond: { $and: [{$lt: ['$$hmk.done_percentage', 100]},
-																					 {$gt: ['$$hmk.limit_date', moment().valueOf()]}]}
+																					 {$gt: ['$$hmk.limit_date', new Date().toISOString()]}]}
  														}
  											 }
  									 }}]
@@ -350,7 +350,7 @@ function getSubscribedUsers(callback) {
 /*Método para ordenar las tareas por fecha*/
 function cronologicalOrder(hmkArr) {
 	hmkArr.sort(function(a, b){
-		return b.limit_date-a.limit_date;
+		return moment(b.limit_date).valueOf()-moment(a.limit_date).valueOf();
 	});
 	return hmkArr;
 }
