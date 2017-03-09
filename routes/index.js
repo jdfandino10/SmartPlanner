@@ -33,6 +33,7 @@ router.get('/users', function (req, res) {
 		res.send(JSON.stringify(users));
 	});
 });
+// probado: bien!
 
 router.get('/users/:id/hmks', function(req, res, next){
 	//en req.query hay categoria y orden
@@ -49,6 +50,8 @@ router.get('/users/:id/hmks', function(req, res, next){
 	}
 });
 
+//Probado bien!
+
 /* POST de una tarea a un usuario segun su id*/
 router.post('/users/:id/hmks', function (req, res) {
 	try{
@@ -63,6 +66,7 @@ router.post('/users/:id/hmks', function (req, res) {
 		res.send(e);
 	}
 });
+// probado: bien!
 
 
 /* PUT modifica una tarea a un usuario segun su id*/
@@ -79,6 +83,7 @@ router.put('/users/:id/hmks/:id_h', function (req, res) {
 		res.send(e);
 	}
 });
+// probado: bien!
 
 /* DELETE una tarea de un usuario segun su id*/
 router.delete('/users/:id/hmks/:id_h', function(req, res){
@@ -93,6 +98,7 @@ router.delete('/users/:id/hmks/:id_h', function(req, res){
 		res.send(e);
 	}
 });
+// probado: bien!
 
 /*PUT de un usuario segun su id*/
 router.put('/users/:id', function(req, res){
@@ -106,7 +112,8 @@ router.put('/users/:id', function(req, res){
 	}catch(e){
 		res.send(e);
 	}
-})
+});
+//Probado bien!
 
 //--------------Fin funciones de peticiones
 
@@ -118,6 +125,8 @@ function getHmks(userIdObj, category, order, callback) {
 	else if (category === 'not_started') getNotStartedHmks(userIdObj, order, callback);
 	else getHistoricHmks(userIdObj, callback);
 }
+
+//Probado bien!
 
 /*Método que da el histórico de tareas ordenado cronologicamente*/
 function getHistoricHmks(userIdObj, callback){
@@ -135,7 +144,8 @@ function getHistoricHmks(userIdObj, callback){
 			}
 		});
 	});
-
+}
+//Probado bien!
 
 /*Método que da las tareas qu ya fueron terminadas*/
 function getFinishedHmks(userIdObj, order, callback){
@@ -170,7 +180,8 @@ function getFinishedHmks(userIdObj, order, callback){
 			}
 		});
 	});
-
+}
+//Probado bien!
 
 
 /*Método que da las tareas que aun no han sido terminadas*/
@@ -205,6 +216,8 @@ function getNotFinishedHmks(userIdObj, order, callback){
 	});
 }
 
+//Probado bien!
+
 /*Método que da las tareas que no han sido terminadas y aun hay plazo para hacer (tareas por hacer)*/
 function getNotStartedHmks(userIdObj, order, callback){
 	MongoClient.connect(url, function(err, db){
@@ -237,6 +250,8 @@ function getNotStartedHmks(userIdObj, order, callback){
 	});
 }
 
+//Probado bien!
+
 /*Método que da los usuarios*/
 function getUsers(username, callback) {
 	MongoClient.connect(url, function(err, db){
@@ -250,6 +265,7 @@ function getUsers(username, callback) {
 		});
 	});
 }
+// probado: bien!
 
 /*Método que modifica a un usuario con el id dado*/
 function updateUser(userIdObj, user, callback) {
@@ -266,6 +282,7 @@ function updateUser(userIdObj, user, callback) {
 										});
 		});
 	}
+// probado: bien!
 
 
 /*Método que agrega tarea a un usuario*/
@@ -279,6 +296,7 @@ function addHmkToUser(objId, hmk, callback) {
 		});
 	});
 }
+// probado: bien!
 
 /*Método que elimina tarea de un usuario*/
 function deleteHmk(userIdObj, hmkIdObj, callback) {
@@ -291,6 +309,7 @@ function deleteHmk(userIdObj, hmkIdObj, callback) {
 		});
 	});
 }
+// probado: bien!
 
 /*Método que actualiza una tarea de un usuario*/
 function updateHmk(userIdObj, hmkIdObj, hmk, callback) {
@@ -311,6 +330,7 @@ function updateHmk(userIdObj, hmkIdObj, hmk, callback) {
 									});
 							});
 						}
+// probado: bien!
 
 /*Metodo que da usuarios que estan suscritos al correo*/
 function getSubscribedUsers(callback) {
@@ -334,6 +354,7 @@ function cronologicalOrder(hmkArr) {
 	});
 	return hmkArr;
 }
+// probado: bien!
 
 /*Método para ordenamiento de las tareas por prioridad
 
