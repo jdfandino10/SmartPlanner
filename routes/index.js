@@ -149,7 +149,6 @@ function getHistoricHmks(userIdObj, callback){
 
 /*Método que da las tareas qu ya fueron terminadas*/
 function getFinishedHmks(userIdObj, order, callback){
-	console.log(callback);
 	MongoClient.connect(url, function(err, db){
 		assert.equal(null, err);
 		var usersCol = db.collection("Users");
@@ -166,12 +165,14 @@ function getFinishedHmks(userIdObj, order, callback){
 									 }}]
 								 ).toArray(function(err, data){
 			assert.equal(null, err);
-			console.log(data[0].hmk);
 			if (data[0]){
 				var hmk;
-				if (order === 'date'){	hmk = cronologicalOrder(data[0].hmk);}
-				else {console.log('LLEGA')
-					hmk = importanceOrderHmks(data[0].hmk);}
+				if (order === 'date'){	
+					hmk = cronologicalOrder(data[0].hmk);
+				}
+				else {
+					hmk = importanceOrderHmks(data[0].hmk);
+				}
 				callback(hmk);
 			}
 			else {
@@ -202,7 +203,6 @@ function getNotFinishedHmks(userIdObj, order, callback){
 								 }}]
 								 ).toArray(function(err, data){
 			assert.equal(null, err);
-			console.log(data[0])
 			if (data[0]){
 				var hmk;
 				if (order === 'date')	hmk = cronologicalOrder(data[0].hmk);
@@ -338,7 +338,6 @@ function getSubscribedUsers(callback) {
 		assert.equal(null, err);
 		var f = {'subscribed':'true'};
 		var usersCol = db.collection("Users");
-		console.log("va a hacer el query");
 		usersCol.find(f).toArray(function(err, data){
 			assert.equal(null, err);
 			callback(data);
@@ -371,19 +370,26 @@ function importanceOrderHmks(hmks, maxDate){
 	var minDate = moment().valueOf();
 	if(maxDate) maxMilis = moment().add(maxDate, 'days').valueOf();
 	var candidates = [];
+	var past = [];
 	// Tener cuidado con la longitud del long debe tener 13 digitos
 	// (incluye milis y es el formato que momentjs da, si se usa un numero de longitud menor
 	// la comparación falla dado que se compara el número!) DAM
 	hmks.forEach(function(hmk){
-		if(hmk.limit_date<=maxMilis && hmk.limit_date>=minDate){
-			hmk.score = hmk.limit_date-((1-(hmk.done_percentage/100))*hmk.estimated_time);
+		var lmdate = moment(hmk.limit_date).valueOf();
+		if(lmdate<=maxMilis && lmdate>=minDate && hmk.done_percentage<100){
+			hmk.score = lmdate-((1-(hmk.done_percentage/100))*hmk.estimated_time);
 			candidates.push(hmk);
+		}else {
+			past.push(hmk);
 		}
+	});
+	past.sort(function(a, b){
+		return a.importance - b.importance;
 	});
 	candidates.sort(function(a, b){
 		return a.score-b.score;
 	});
-	return candidates;
+	return candidates.concat(past);
 }
 // probado: bien
 //--------------Fin funciones de ordenar
@@ -453,7 +459,6 @@ var job = new CronJob('00 00 8 * * 5', function() {
 true
 );
 job.start();
-console.log('job status', job.running);
 //--------------Fin funciones de correo
 
 module.exports = router;
