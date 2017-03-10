@@ -1,2 +1,2 @@
 # SmartPlanner
-A homework planner that takes into account some parameters to notify the user the best order in which he should do his homework
+A homework planner that takes into account some parameters to notify the user the best order in which he should do his homework. This corresponds to the backend of the aplication. You can see the front [here](https://github.com/dalthviz/SmartPlannerFE). You can access the API [here](https://smartplannerbe.herokuapp.com/). You can access the web app [here](https://smartplannerfe.herokuapp.com/), using the beta users Jose or Daniel (no password required).
