@@ -7,6 +7,7 @@ var moment = require('moment');
 var CronJob = require('cron').CronJob;
 const nodemailer = require('nodemailer');
 
+// Es buena practica poner esto como una variable de entorno.
 var url = 'mongodb://server:serverPass1@ds163718.mlab.com:63718/smart_planner';
 
 // create reusable transporter object using the default SMTP transport
@@ -462,6 +463,7 @@ job.start();
 //--------------Fin funciones de correo
 
 module.exports = router;
+//No poner las credenciales quemadas dentro del código por seguridad.
 /*
 mlab:
 jdfandino10
